@@ -2,10 +2,12 @@
 Puppet::Type.type(:tmpfile).provide(:bash) do
 
   def create()
+    Puppet.debug("README: touch /tmp/#{@resource[:name]}")
     `touch /tmp/#{@resource[:name]}`
   end
 
   def destroy()
+    Puppet.debug("README: rm /tmp/#{@resource[:name]}")
     `rm /tmp/#{@resource[:name]}`
   end
 
@@ -14,6 +16,7 @@ Puppet::Type.type(:tmpfile).provide(:bash) do
     if $?.exitstatus != 0
       return false
     else
+      Puppet.debug("README: tmpfile #{@resource[:name]} exists")
       return true
     end
   end
