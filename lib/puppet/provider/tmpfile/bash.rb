@@ -24,7 +24,7 @@ Puppet::Type.type(:tmpfile).provide(:bash) do
       myhash[:ensure]  = :present
       myhash[:name]    = thing['name']
       myhash[:insides] = thing['insides']
-      myhash[:extras] = thing['extras']
+      myhash[:extras]  = thing['extras']
       new(myhash)
     end
   end
@@ -55,7 +55,7 @@ Puppet::Type.type(:tmpfile).provide(:bash) do
   def create()
     @do_flush = false
     Puppet.debug("README: Writing /tmp/#{@resource[:name]}")
-    File.open("/tmp/#{@resource[:name]}", 'w') { |file| file.write("#{@resource[:insides]}\n#{@resource[:extras]}") }
+    File.open("/tmp/#{@resource[:name]}", 'w') { |file| file.write("#{@resource[:insides]}\n#{@resource[:extras]}\n") }
     @property_hash[:ensure]  = :present
     @property_hash[:insides] = @resource[:insides]
     @property_hash[:extras]  = @resource[:extras]
@@ -64,7 +64,6 @@ Puppet::Type.type(:tmpfile).provide(:bash) do
   def destroy()
     @do_flush = false
     Puppet.debug("README: Deleting /tmp/#{@resource[:name]}")
-    require 'pry'; binding.pry
     File.delete("/tmp/#{@resource[:name]}")
     @property_hash[:ensure] = :absent
   end
@@ -79,13 +78,15 @@ Puppet::Type.type(:tmpfile).provide(:bash) do
   end
 
   def flush()
-    insides_value = @flushme['insides'] || @property_hash[:insides]
-    extras_value  = @flushme['extras']  || @property_hash[:extras]
-    `echo -e "#{insides_value}\n#{extras_value}" > /tmp/#{@resource[:name]}`
+    if @do_flush
+      insides_value = @flushme['insides'] || @property_hash[:insides]
+      extras_value  = @flushme['extras']  || @property_hash[:extras]
+      File.open("/tmp/#{@resource[:name]}", 'w') { |file| file.write("#{insides_value}\n#{extras_value}\n") }
 
-    # Don't forget to update @property_hash
-    @property_hash[:insides] = insides_value
-    @property_hash[:extras]  = extras_value
+      # Don't forget to update @property_hash
+      @property_hash[:insides] = insides_value
+      @property_hash[:extras]  = extras_value
+    end
   end
 
 end
