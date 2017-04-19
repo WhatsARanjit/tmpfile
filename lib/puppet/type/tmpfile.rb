@@ -6,7 +6,7 @@ Puppet::Type.newtype(:tmpfile) do
 
   newproperty(:extras) do
     munge do |value|
-      return upcase(value)
+      return value.upcase
     end
   end
 end
