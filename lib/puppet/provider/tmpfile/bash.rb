@@ -9,13 +9,22 @@ Puppet::Type.type(:tmpfile).provide(:bash) do
   end
 
   def self.instances
-    things = `for i in $(find /tmp/ -maxdepth 1 -type f -printf "%f\n"); do echo "$i,\"$(cat /tmp/$i | tr '\n' ',')\""; done 2> /dev/null`.split("\n")
+    things   = []
+    tmpfiles = Dir['/tmp/*'].select { |f| File.file?(f) }
+    tmpfiles.each do |file|
+      contents = File.read(file).split("\n")
+      things << {
+        'name'    => file.gsub(/^\/tmp\//,''),
+        'insides' => contents[0],
+        'extras'  => contents[1],
+      }
+    end
     things.collect do |thing|
       myhash           = {}
       myhash[:ensure]  = :present
-      myhash[:name]    = `echo #{thing} | cut -d ',' -f1 | tr -d '\n'`
-      myhash[:insides] = `echo #{thing} | cut -d ',' -f2 | tr -d '\n'`
-      myhash[:extras]  = `echo #{thing} | cut -d ',' -f3 | tr -d '\n'`
+      myhash[:name]    = thing['name']
+      myhash[:insides] = thing['insides']
+      myhash[:extras] = thing['extras']
       new(myhash)
     end
   end
@@ -45,8 +54,8 @@ Puppet::Type.type(:tmpfile).provide(:bash) do
 
   def create()
     @do_flush = false
-    Puppet.debug("README: echo -e \"#{@resource[:insides]}\\n#{@resource[:extras]}\" > /tmp/#{@resource[:name]}")
-    `echo -e "#{@resource[:insides]}\n#{@resource[:extras]}" > /tmp/#{@resource[:name]}`
+    Puppet.debug("README: Writing /tmp/#{@resource[:name]}")
+    File.open("/tmp/#{@resource[:name]}", 'w') { |file| file.write("#{@resource[:insides]}\n#{@resource[:extras]}") }
     @property_hash[:ensure]  = :present
     @property_hash[:insides] = @resource[:insides]
     @property_hash[:extras]  = @resource[:extras]
@@ -54,8 +63,9 @@ Puppet::Type.type(:tmpfile).provide(:bash) do
 
   def destroy()
     @do_flush = false
-    Puppet.debug("README: rm /tmp/#{@resource[:name]}")
-    `rm /tmp/#{@resource[:name]}`
+    Puppet.debug("README: Deleting /tmp/#{@resource[:name]}")
+    require 'pry'; binding.pry
+    File.delete("/tmp/#{@resource[:name]}")
     @property_hash[:ensure] = :absent
   end
 
