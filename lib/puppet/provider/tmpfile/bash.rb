@@ -21,18 +21,19 @@ Puppet::Type.type(:tmpfile).provide(:bash) do
     end
   end
 
-  def insides
-    @property_hash[:insides]
-  end
+  mk_resource_methods
 
   def insides=(value)
+    Puppet.debug("README: setting insides to '#{value}'")
+    `echo #{value} > /tmp/#{@resource[:name]}`
     @property_hash[:insides] = value
   end
 
   def create()
-    Puppet.debug("README: touch /tmp/#{@resource[:name]}")
-    `touch /tmp/#{@resource[:name]}`
-    @property_hash[:ensure] = :present
+    Puppet.debug("README: echo #{@resource[:insides]} > /tmp/#{@resource[:name]}")
+    `echo #{@resource[:insides]} > /tmp/#{@resource[:name]}`
+    @property_hash[:ensure]  = :present
+    @property_hash[:insides] = @resource[:insides]
   end
 
   def destroy()
