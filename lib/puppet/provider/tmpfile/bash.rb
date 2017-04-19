@@ -2,12 +2,13 @@
 Puppet::Type.type(:tmpfile).provide(:bash) do
 
   def self.instances
-    things = `for i in $(find /tmp/ -maxdepth 1 -type f -printf "%f\n"); do echo "$i,\"$(cat /tmp/$i)\""; done 2> /dev/null`.split("\n")
+    things = `for i in $(find /tmp/ -maxdepth 1 -type f -printf "%f\n"); do echo "$i,\"$(cat /tmp/$i | tr '\n' ',')\""; done 2> /dev/null`.split("\n")
     things.collect do |thing|
       myhash           = {}
       myhash[:ensure]  = :present
       myhash[:name]    = `echo #{thing} | cut -d ',' -f1 | tr -d '\n'`
       myhash[:insides] = `echo #{thing} | cut -d ',' -f2 | tr -d '\n'`
+      myhash[:extras]  = `echo #{thing} | cut -d ',' -f3 | tr -d '\n'`
       new(myhash)
     end
   end
@@ -30,10 +31,11 @@ Puppet::Type.type(:tmpfile).provide(:bash) do
   end
 
   def create()
-    Puppet.debug("README: echo #{@resource[:insides]} > /tmp/#{@resource[:name]}")
-    `echo #{@resource[:insides]} > /tmp/#{@resource[:name]}`
+    Puppet.debug("README: echo -e \"#{@resource[:insides]}\\n#{@resource[:extras]}\" > /tmp/#{@resource[:name]}")
+    `echo -e "#{@resource[:insides]}\n#{@resource[:extras]}" > /tmp/#{@resource[:name]}`
     @property_hash[:ensure]  = :present
     @property_hash[:insides] = @resource[:insides]
+    @property_hash[:extras]  = @resource[:extras]
   end
 
   def destroy()
