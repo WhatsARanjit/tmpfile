@@ -1,0 +1,6 @@
+#!/bin/bash
+
+current_step=`git branch --no-color | grep \* | cut -d '-' -f2`
+next_step=$((current_step+1))
+
+git checkout step-$next_step 2> /dev/null
