@@ -33,13 +33,11 @@ Puppet::Type.type(:tmpfile).provide(:bash) do
 
   def insides=(value)
     Puppet.debug("README: setting insides to '#{value}'")
-    `echo #{value} > /tmp/#{@resource[:name]}`
     @flushme['insides'] = value
   end
 
   def extras=(value)
     Puppet.debug("README: setting extras to '#{value}'")
-    `echo #{value} > /tmp/#{@resource[:name]}`
     @flushme['extras'] = value
   end
 
